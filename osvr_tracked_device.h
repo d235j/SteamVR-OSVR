@@ -237,17 +237,17 @@ public:
 
     // Camera Methods
     // ------------------------------------
-    virtual bool HasCamera() OSVR_OVERRIDE;
+	virtual bool HasCamera() OSVR_OVERRIDE;
 	virtual bool GetCameraFirmwareDescription( char *pBuffer, uint32_t nBufferLen ) OSVR_OVERRIDE;
 	virtual bool GetCameraFrameDimensions( vr::ECameraVideoStreamFormat nVideoStreamFormat, uint32_t *pWidth, uint32_t *pHeight ) OSVR_OVERRIDE;
-    virtual bool GetCameraFrameBufferingRequirements( int *pDefaultFrameQueueSize, uint32_t *pFrameBufferDataSize ) OSVR_OVERRIDE;
-    virtual bool SetCameraFrameBuffering( int nFrameBufferCount, void **ppFrameBuffers, uint32_t nFrameBufferDataSize ) OSVR_OVERRIDE;
+	virtual bool GetCameraFrameBufferingRequirements( int *pDefaultFrameQueueSize, uint32_t *pFrameBufferDataSize ) OSVR_OVERRIDE;
+	virtual bool SetCameraFrameBuffering( int nFrameBufferCount, void **ppFrameBuffers, uint32_t nFrameBufferDataSize ) OSVR_OVERRIDE;
 	virtual bool SetCameraVideoStreamFormat( vr::ECameraVideoStreamFormat nVideoStreamFormat ) OSVR_OVERRIDE;
 	virtual vr::ECameraVideoStreamFormat GetCameraVideoStreamFormat() OSVR_OVERRIDE;
-    virtual bool StartVideoStream() OSVR_OVERRIDE;
-    virtual void StopVideoStream() OSVR_OVERRIDE;
-    virtual bool IsVideoStreamActive() OSVR_OVERRIDE;
-    virtual float GetVideoStreamElapsedTime() OSVR_OVERRIDE;
+	virtual bool StartVideoStream() OSVR_OVERRIDE;
+	virtual void StopVideoStream() OSVR_OVERRIDE;
+	virtual bool IsVideoStreamActive() OSVR_OVERRIDE;
+	virtual float GetVideoStreamElapsedTime() OSVR_OVERRIDE;
 	virtual const vr::CameraVideoStreamFrame_t *GetVideoStreamFrame() OSVR_OVERRIDE;
 	virtual void ReleaseVideoStreamFrame( const vr::CameraVideoStreamFrame_t *pFrameImage ) OSVR_OVERRIDE;
 	virtual bool SetAutoExposure( bool bEnable ) OSVR_OVERRIDE;
@@ -486,6 +486,10 @@ bool OSVRTrackedDevice::GetBoolTrackedDeviceProperty(vr::TrackedDeviceProperty p
 {
     const bool default_value = false;
 
+    logger_->Log("Querying Bool property: ");
+    logger_->Log(std::to_string(prop).c_str());
+    logger_->Log("\n");
+
     if (isWrongDataType(prop, bool())) {
         if (error)
             *error = vr::TrackedProp_WrongDataType;
@@ -530,6 +534,10 @@ bool OSVRTrackedDevice::GetBoolTrackedDeviceProperty(vr::TrackedDeviceProperty p
 float OSVRTrackedDevice::GetFloatTrackedDeviceProperty(vr::TrackedDeviceProperty prop, vr::TrackedPropertyError* error)
 {
     const float default_value = 0.0f;
+
+    logger_->Log("Querying Float property: ");
+    logger_->Log(std::to_string(prop).c_str());
+    logger_->Log("\n");
 
     if (isWrongDataType(prop, float())) {
         if (error)
@@ -596,7 +604,11 @@ float OSVRTrackedDevice::GetFloatTrackedDeviceProperty(vr::TrackedDeviceProperty
 int32_t OSVRTrackedDevice::GetInt32TrackedDeviceProperty(vr::TrackedDeviceProperty prop, vr::TrackedPropertyError* error)
 {
     const int32_t default_value = 0;
-
+    
+    logger_->Log("Querying Int32 property: ");
+    logger_->Log(std::to_string(prop).c_str());
+    logger_->Log("\n");
+    
     if (isWrongDataType(prop, int32_t())) {
         if (error)
             *error = vr::TrackedProp_WrongDataType;
@@ -647,6 +659,11 @@ uint64_t OSVRTrackedDevice::GetUint64TrackedDeviceProperty(vr::TrackedDeviceProp
 {
     const uint64_t default_value = 0;
 
+    logger_->Log("Querying Uint64 property: ");
+    logger_->Log(std::to_string(prop).c_str());
+    logger_->Log("\n");
+
+
     if (isWrongDataType(prop, uint64_t())) {
         if (error)
             *error = vr::TrackedProp_WrongDataType;
@@ -691,6 +708,10 @@ vr::HmdMatrix34_t OSVRTrackedDevice::GetMatrix34TrackedDeviceProperty(vr::Tracke
     vr::HmdMatrix34_t default_value;
     map(default_value) = Matrix34f::Identity();
 
+    logger_->Log("Querying Matrix34 property: ");
+    logger_->Log(std::to_string(prop).c_str());
+    logger_->Log("\n");
+
     if (isWrongDataType(prop, vr::HmdMatrix34_t())) {
         if (error)
             *error = vr::TrackedProp_WrongDataType;
@@ -724,6 +745,10 @@ vr::HmdMatrix34_t OSVRTrackedDevice::GetMatrix34TrackedDeviceProperty(vr::Tracke
 uint32_t OSVRTrackedDevice::GetStringTrackedDeviceProperty(vr::TrackedDeviceProperty prop, char* value, uint32_t buffer_size, vr::TrackedPropertyError* error)
 {
     const uint32_t default_value = 0;
+
+    logger_->Log("Querying string property: ");
+    logger_->Log(std::to_string(prop).c_str());
+    logger_->Log("\n");
 
     if (isWrongDataType(prop, value)) {
         if (error)
