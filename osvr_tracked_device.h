@@ -46,6 +46,26 @@
 #include <string>
 #include <iostream>
 
+Eigen::Matrix4d make_projection_matrix(double vertical_fov, double aspect_ratio, double near_plane, double far_plane)
+{
+    // References:
+    // http://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
+    // http://schabby.de/projection-matrix/
+    const double y_scale = 1.0 / std::tan(vertical_fov / 2.0);
+    const double x_scale = y_scale / aspect_ratio;
+
+    const double alpha = -(far_plane + near_plane) / (near_plane - far_plane);
+    const double beta = (2 * near_plane * far_plane) / (near_plane - far_plane);
+
+    Eigen::Matrix4d mat;
+    mat << x_scale, 0.0, 0.0, 0.0,
+        0.0, y_scale, 0.0, 0.0,
+        0.0, 0.0, alpha, -1.0,
+        0.0, 0.0, beta, 0.0;
+
+    return mat;
+}
+
 class OSVRTrackedDevice : public vr::ITrackedDeviceServerDriver
 {
 public:
@@ -394,6 +414,44 @@ void OSVRTrackedDevice::GetEyeOutputViewport(vr::Hmd_Eye eye, uint32_t* x, uint3
 
 void OSVRTrackedDevice::GetProjectionRaw(vr::Hmd_Eye eye, float* left, float* right, float* top, float* bottom)
 {
+    const double z_near = 0.1;
+    const double z_far = 100.0;
+    const Eigen::Matrix4d center = make_projection_matrix(3.141592653589793238462643383280/2.0, 0.888889, z_near, z_far);
+
+    // Translate projection matrix to left or right eye
+    double eye_translation = GetIPD() / 2.0;
+    if (vr::Eye_Left == eye) {
+        eye_translation *= -1.0;
+    }
+    const Eigen::Affine3d translation(Eigen::Translation3d(Eigen::Vector3d(eye_translation, 0.0, 0.0)));
+
+    const Eigen::Matrix4d eye_matrix = translation * center;
+
+    // Reference: https://github.com/ValveSoftware/openvr/wiki/IVRSystem::GetProjectionRaw
+    // This is similar to glFrustum but not quite the same!
+    // idx = 1 / (right - left)
+    // idy = 1 / (bottom - top)
+    // idz = 1 / (far - near)
+    // sx = right + left
+    // sy = bottom + top
+    // eye(0, 0) = 2 * idx = 2 / (right - left)
+    // eye(1, 1) = 2 * idy = 2 / (bottom - top)
+    // eye(0, 2) = sx * idx = (right + left) / (right - left)
+    // eye(1, 2) = sy * idy = (bottom + top) / (bottom - top)
+    // eye(2, 2) = -far * idz = -far / (far - near)
+    // eye(2, 3) = -(far * near * idz) = -(far * near) / (far - near)
+    // eye(3, 2) = -1
+
+    const double dx = 2.0 / eye_matrix(0, 0); // (right - left)
+    const double sx = eye_matrix(0, 2) * dx; // (right + left)
+    *right = static_cast<float>((sx + dx) / 2.0); // right
+    *left = static_cast<float>(sx - *right);
+
+    const double dy = 2.0 / eye_matrix(1, 1); // (bottom - top)
+    const double sy = eye_matrix(1, 2) * dy; // (bottom + top)
+    *bottom = static_cast<float>((sy + dy) / 2.0); // bottom
+    *top = static_cast<float>(sy - *bottom);
+    /*
     // Reference: https://github.com/ValveSoftware/openvr/wiki/IVRSystem::GetProjectionRaw
     // SteamVR expects top and bottom to be swapped!
     osvr::clientkit::ProjectionClippingPlanes pl = m_DisplayConfig.getViewer(0).getEye(eye).getSurface(0).getProjectionClippingPlanes();
@@ -401,6 +459,7 @@ void OSVRTrackedDevice::GetProjectionRaw(vr::Hmd_Eye eye, float* left, float* ri
     *right = static_cast<float>(pl.right);
     *bottom = static_cast<float>(pl.top); // SWAPPED
     *top = static_cast<float>(pl.bottom); // SWAPPED
+    */
 }
 
 vr::HmdMatrix34_t OSVRTrackedDevice::GetHeadFromEyePose(vr::Hmd_Eye eye)
